@@ -1,15 +1,12 @@
 #![feature(globs, unboxed_closures)]
 
 extern crate libc;
+extern crate "tcod-sys" as ffi;
 
 use libc::{c_int, c_uint, c_float, uint8_t, c_void};
 
 pub use Console::Root as RootConsole;
-
-
-#[allow(non_camel_case_types, non_snake_case, non_upper_case_globals,
-        missing_copy_implementations)]
-pub mod ffi;
+pub use ffi::TCOD_color_t as Color;
 
 #[allow(non_camel_case_types)]
 type c_bool = uint8_t;
@@ -346,6 +343,8 @@ extern "C" fn c_path_callback(xf: c_int, yf: c_int,
     }
 }
 
+type TcodPathCb = extern "C" fn(c_int, c_int, c_int, c_int, *mut c_void) -> c_float;
+
 impl<'a> AStarPath<'a> {
     pub fn new_from_callback<T: 'a+FnMut((int, int), (int, int)) -> f32>(
         width: int, height: int, path_callback: T,
@@ -360,7 +359,7 @@ impl<'a> AStarPath<'a> {
             let user_data_ptr: *mut (uint, uint) = &mut *ptr;
 
             let tcod_path = ffi::TCOD_path_new_using_function(width as c_int, height as c_int,
-                                                              Some(c_path_callback),
+                                                              Some(c_path_callback as TcodPathCb),
                                                               user_data_ptr as *mut c_void,
                                                               diagonal_cost as c_float);
             AStarPath {
@@ -402,11 +401,11 @@ impl<'a> AStarPath<'a> {
         }
     }
 
-    pub fn walk<'a>(&'a mut self) -> AStarPathIterator<'a> {
+    pub fn walk<'b>(&'b mut self) -> AStarPathIterator<'b> {
         AStarPathIterator{tcod_path: self.tcod_path.ptr, recalculate: false}
     }
 
-    pub fn walk_recalculate<'a>(&'a mut self) -> AStarPathIterator<'a> {
+    pub fn walk_recalculate<'b>(&'b mut self) -> AStarPathIterator<'b> {
         AStarPathIterator{tcod_path: self.tcod_path.ptr, recalculate: true}
     }
 
@@ -505,7 +504,7 @@ impl<'a> DijkstraPath<'a> {
             let user_data_ptr: *mut (uint, uint) = &mut *ptr;
             let tcod_path = ffi::TCOD_dijkstra_new_using_function(width as c_int,
                                                                   height as c_int,
-                                                                  Some(c_path_callback),
+                                                                  Some(c_path_callback as TcodPathCb),
                                                                   user_data_ptr as *mut c_void,
                                                                   diagonal_cost as c_float);
             DijkstraPath {
@@ -549,7 +548,7 @@ impl<'a> DijkstraPath<'a> {
         }
     }
 
-    pub fn walk<'a>(&'a mut self) -> DijkstraPathIterator<'a> {
+    pub fn walk<'b>(&'b mut self) -> DijkstraPathIterator<'b> {
         DijkstraPathIterator{tcod_path: self.tcod_path.ptr}
     }
 
@@ -754,19 +753,6 @@ pub struct KeyState {
     pub shift: bool,
 }
 
-#[deriving(PartialEq, Copy, Clone, Show)]
-#[repr(C)]
-pub struct Color {
-    pub r: uint8_t,
-    pub g: uint8_t,
-    pub b: uint8_t,
-}
-
-impl Color {
-    pub fn new(red: u8, green: u8, blue: u8) -> Color {
-        Color{r: red as uint8_t, g: green as uint8_t, b: blue as uint8_t}
-    }
-}
 
 pub mod colors {
     pub use ffi::TCOD_black as black;
