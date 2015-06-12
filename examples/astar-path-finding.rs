@@ -1,11 +1,9 @@
-#![feature(unboxed_closures)]
-
 extern crate tcod;
 
-use tcod::AStarPath;
+use tcod::pathfinding::AStar;
 
-fn create_path() -> AStarPath<'static> {
-    let chess_board: [[int, ..8], ..8] = [
+fn create_path() -> AStar<'static> {
+    let chess_board: [[i32; 8]; 8] = [
         [1, 0, 1, 0, 1, 0, 1, 0],
         [0, 1, 0, 1, 0, 1, 0, 1],
         [1, 0, 1, 0, 1, 0, 1, 0],
@@ -16,16 +14,16 @@ fn create_path() -> AStarPath<'static> {
         [0, 1, 0, 1, 0, 1, 0, 1],
     ];
     // Movement like in Checkers: you can only move to the square of the same colour
-    let can_move = move |&mut: from: (int, int), to: (int, int)| -> f32 {
+    let can_move = move |from: (i32, i32), to: (i32, i32)| -> f32 {
         let (fx, fy) = from;
         let (tx, ty) = to;
-        if chess_board[fy as uint][fx as uint] == chess_board[ty as uint][tx as uint] {
+        if chess_board[fy as usize][fx as usize] == chess_board[ty as usize][tx as usize] {
             1.0
         } else {
             0.0
         }
     };
-    AStarPath::new_from_callback(8, 8, can_move, 1.0)
+    AStar::new_from_callback(8, 8, can_move, 1.0)
 }
 
 fn main() {
@@ -58,7 +56,7 @@ fn main() {
 
     // Walk the path (consuming it):
     for pos in path.walk() {
-        println!("Walking to {}", pos)
+        println!("Walking to {:?}", pos);
     }
 
     assert_eq!(path.len(), 0);

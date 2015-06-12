@@ -1,0 +1,17 @@
+[package]
+name = "tcod-sys"
+description = "Raw FFI bindings & build script to link against libtcod."
+version = "2.0.11"
+license = "WTFPL"
+homepage = "https://github.com/tomassedovic/tcod-rs"
+repository = "https://github.com/tomassedovic/tcod-rs/tree/master/tcod-sys"
+authors = ["tomas@sedovic.cz"]
+links = "tcod"
+build = "build.rs"
+
+[lib]
+name = "tcod_sys"
+path = "lib.rs"
+
+[dependencies]
+libc = "0.1.5"
